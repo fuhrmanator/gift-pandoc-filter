@@ -4,6 +4,7 @@
   "description": "Convert GIFT format code fences to pandoc AST",
   "repository": {"url": "https://github.com/fuhrmanator/gift-pandoc-filter"},
   "scripts": {
+    "build": "tsc",
     "test": "jest --colors"
   },
   "keywords": [],
