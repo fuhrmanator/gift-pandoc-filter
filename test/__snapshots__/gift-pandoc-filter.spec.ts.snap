@@ -1,0 +1,54 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GIFT Pandoc Filter should generate markdown with codeblock 1`] = `
+"# Exam
+
+#. Question
+
+   A.  correct answer
+   A.  wrong answer
+
+# Another set of questions
+
+#. Question
+
+   A.  correct answer that is really really really really really really really really long
+   A.  wrong answer
+
+
+#. Question
+
+   A.  correct answer that is really really really really really really really really long
+   A.  wrong answer
+
+
+#. Question
+
+   A.  correct answer that is really really really really really really really really long
+   A.  wrong answer
+
+
+#. Question
+
+   A.  correct answer that is really really really really really really really really long
+   A.  wrong answer
+
+
+#. Question
+
+   A.  correct answer that is really really really really really really really really long
+   A.  wrong answer
+
+
+#. Question
+
+   A.  correct answer that is really really really really really really really really long
+   A.  wrong answer
+
+
+#. Question
+
+   A.  correct answer that is really really really really really really really really long
+   A.  wrong answer
+"
+`;
