@@ -1,4 +1,5 @@
-#!/usr/bin/env node
+#!/usr/bin/env ts-node-script
+
 
 import { parse, GIFTQuestion } from "gift-pegjs"
 import {
@@ -9,6 +10,113 @@ import {
     Str,
     PandocMetaMap
 } from "pandoc-filter";
+import { promisify } from "util";
+import { exec as sysExec } from "child_process"
+const exec = promisify(sysExec);
+const { spawn } = require('promisify-child-process');
+
+
+async function convertMarkdownToFormat(theMarkdown: string, format: string) {
+    const pandoc = spawn('pandoc', ['--eol=lf', '--extract-media=tmp', '--from', 'markdown', '--to', format], {maxBuffer: 200 * 1024})
+    pandoc.stdin.write(theMarkdown);
+    pandoc.stdin.end();
+
+    let result = "";
+    pandoc.stdout.on('data', (data: string) => {
+        // console.error(`Received chunk ${data}`);
+        result = data;
+    });
+    const { stderr } = await pandoc;
+    return result;
+}
+
+stdio(async (ele, _format, meta) => {
+    //    console.error(meta);
+    let result: any;
+    if (ele.t === `CodeBlock`) {
+        const [headers, content] = ele.c;
+        const [, [language]] = headers;
+        if (language === "gift") {
+            const questions: GIFTQuestion[] = parse(content);
+            // const id = headers[0];
+            let theMarkdown: string = "";
+            questions.forEach(question => {
+                switch (question.type) {
+                    case "MC":
+                        // Use "pandoc" markdown, e.g., fancy_list
+                        theMarkdown += '\n\n#. ' + question.stem.text + '\n\n';
+                        question.choices.forEach(choice => {
+                            theMarkdown += "   A.  " + choice.text.text + '\n';
+                        });
+                        break;
+                    default:
+                        break;
+                }
+            });
+            if (_format !== 'markdown') {
+                const convertedMarkdown = await convertMarkdownToFormat(theMarkdown, _format);
+                // console.error(`result of conversion to ${_format}: ${convertedMarkdown}`)
+                result = RawBlock(_format, '\n' + convertedMarkdown);
+            } else {
+                result = RawBlock(_format, theMarkdown);
+            }
+
+            return result;
+        } else { return }
+    } else { return }
+});
+
+// const getInlineImage = (
+//   response: IArgdownResponse,
+//   format: "svg" | "png" | "jpg" | "webp"
+// ) => {
+//   const inlineFormat = format == "svg" ? "svg+xml" : format;
+//   let result = response[format]!;
+//   if (typeof result === "string" || result instanceof String) {
+//     result = Buffer.from(result);
+//   }
+//   return `data:image/${inlineFormat};base64,${result.toString("base64")}`;
+// };
+// const getProcess = (settings: IArgdownFilterSettings) => {
+//   const process = [
+//     "parse-input",
+//     "build-model",
+//     "build-map",
+//     "transform-closed-groups",
+//     "colorize",
+//     "export-dot",
+//     "export-svg"
+//   ];
+//   if (settings.format !== "svg") {
+//     process.push(`export-${settings.format}`);
+//   }
+//   if (settings.mode == "file") {
+//     process.push(`save-as-${settings.format}`);
+//   } else if (settings.mode == "web-component") {
+//     process.push("highlight-source", "export-web-component");
+//   }
+//   return process;
+// };
+// const getPandocImage = (
+//   settings: IArgdownFilterSettings,
+//   imagePath: string,
+//   id: string
+// ) => {
+//   const caption = settings.caption || "";
+//   const attr: [string, string][] = [];
+//   if (settings.width) {
+//     attr.push(["width", settings.width.toString()]);
+//   }
+//   if (settings.height) {
+//     attr.push(["height", settings.height.toString()]);
+//   }
+//   const fig = `fig:${settings.caption}`;
+//   return Para([Image([id, [], attr], [Str(caption)], [imagePath, fig])]);
+// };
+
+
+//////////////////////
+
 // import { argdown, IArgdownRequest } from "@argdown/node";
 // import { IArgdownResponse } from "@argdown/core";
 // import defaultsDeep from "lodash.defaultsdeep";
@@ -67,180 +175,3 @@ import {
 //   config?: string;
 //   sourceHighlighter?: "web-component";
 // }
-stdio(async (ele, _format, meta) => {
-//    console.error(meta);
-    if (ele.t === `CodeBlock`) {
-        const [headers, content] = ele.c;
-        const [, [language]] = headers;
-        if (language === "gift") {
-            // const id = headers[0];
-            const questions: GIFTQuestion[] = parse(content);
-            let theMarkdown:string = "";
-            questions.forEach(question => {
-                switch (question.type) {
-                    case "MC":
-                        theMarkdown += '\n\n#. ' + question.stem.text + '\n\n';
-                        question.choices.forEach(choice => {
-                            theMarkdown += "   A.  " + choice.text.text + '\n';
-                        });
-                        break;
-                    default:
-                        break;
-                }
-            });
-            // console.error(`theMarkdown = ${theMarkdown}`)
-            return RawBlock("markdown", theMarkdown)
-            //   const settings: IArgdownFilterSettings = { ...getFilterSettings(meta) };
-            //   headers[2].map(item => {
-            //     (settings as any)[item[0]] = item[1];
-            //   });
-            //   const config = await getArgdownConfig(settings.config);
-            //   const id = headers[0];
-            //   const process = getProcess(settings);
-            //   if (settings.format != "svg") {
-            //     const imageExportInstalled = await tryToInstallImageExport(argdown);
-            //     if (!imageExportInstalled) {
-            //       throw new Error(
-            //         `You are trying to export an Argdown map to ${settings.format}. Please run "npm install -g @argdown/image-export" to install the Ardown image export plugin.`
-            //       );}
-            //   }
-            //   switch (settings.mode) {
-            //     case "web-component": {
-            //       const request: IArgdownRequest = defaultsDeep(
-            //         {
-            //           input: content,
-            //           process
-            //         },
-            //         config,
-            //         {
-            //           webComponent: {
-            //             figureCaption: settings.caption,
-            //             addGlobalStyles: webComponentCount == 0,
-            //             addWebComponentPolyfill: webComponentCount == 0,
-            //             addWebComponentScript: webComponentCount == 0
-            //           }
-            //         }
-            //       );
-            //       webComponentCount++;
-            //       const response = await argdown.runAsync(request);
-            //       return RawBlock("html", response.webComponent || "");
-            //     }
-            //     case "inline": {
-            //       const request: IArgdownRequest = defaultsDeep(
-            //         {
-            //           input: content,
-            //           process
-            //         },
-            //         config
-            //       );
-            //       const response = await argdown.runAsync(request);
-            //       settings.caption =
-            //         request.webComponent?.figureCaption || settings.caption;
-            //       let inlineImage = getInlineImage(response, settings.format!)!;
-            //       return getPandocImage(settings, inlineImage, id);
-            //     }
-            //     case "file": {
-            //       let fileName = id;
-            //       if (!fileName || fileName == "") {
-            //         fileName = `map-${imageCounter}`;
-            //         imageCounter++;
-            //       }
-            //       const request: IArgdownRequest = defaultsDeep(
-            //         {
-            //           input: content,
-            //           process,
-            //           saveAs: {
-            //             fileName
-            //           }
-            //         },
-            //         config
-            //       );
-            //       const response = await argdown.runAsync(request);
-            //       settings.caption =
-            //         request.webComponent?.figureCaption || settings.caption;
-            //       return getPandocImage(settings, response.outputPath!, id);
-            //     }
-            //   }
-        } else { return }
-        // else if (language === "argdown") {
-        //   const settings: IArgdownFilterSettings = { ...getFilterSettings(meta) };
-        //   let sourceMode = settings.sourceHighlighter;
-        //   headers[2].map(item => {
-        //     if (item[0] === "mode") {
-        //       (<string>sourceMode) = item[1];
-        //     }
-        //     (settings as any)[item[0]] = item[1];
-        //   });
-        //   if (sourceMode === "web-component") {
-        //     const config = await getArgdownConfig(settings.config);
-        //     const process = getProcess(settings);
-        //     const request: IArgdownRequest = defaultsDeep(
-        //       {
-        //         input: content,
-        //         process
-        //       },
-        //       config,
-        //       {
-        //         webComponent: {
-        //           initialView: "source",
-        //           figureCaption: settings.caption,
-        //           addGlobalStyles: webComponentCount == 0,
-        //           addWebComponentPolyfill: webComponentCount == 0,
-        //           addWebComponentScript: webComponentCount == 0
-        //         }
-        //       }
-        //     );
-        //     webComponentCount++;
-        //     const response = await argdown.runAsync(request);
-        //     return RawBlock("html", response.webComponent || "");
-        //   }
-        // }
-    } else { return }
-});
-// const getInlineImage = (
-//   response: IArgdownResponse,
-//   format: "svg" | "png" | "jpg" | "webp"
-// ) => {
-//   const inlineFormat = format == "svg" ? "svg+xml" : format;
-//   let result = response[format]!;
-//   if (typeof result === "string" || result instanceof String) {
-//     result = Buffer.from(result);
-//   }
-//   return `data:image/${inlineFormat};base64,${result.toString("base64")}`;
-// };
-// const getProcess = (settings: IArgdownFilterSettings) => {
-//   const process = [
-//     "parse-input",
-//     "build-model",
-//     "build-map",
-//     "transform-closed-groups",
-//     "colorize",
-//     "export-dot",
-//     "export-svg"
-//   ];
-//   if (settings.format !== "svg") {
-//     process.push(`export-${settings.format}`);
-//   }
-//   if (settings.mode == "file") {
-//     process.push(`save-as-${settings.format}`);
-//   } else if (settings.mode == "web-component") {
-//     process.push("highlight-source", "export-web-component");
-//   }
-//   return process;
-// };
-// const getPandocImage = (
-//   settings: IArgdownFilterSettings,
-//   imagePath: string,
-//   id: string
-// ) => {
-//   const caption = settings.caption || "";
-//   const attr: [string, string][] = [];
-//   if (settings.width) {
-//     attr.push(["width", settings.width.toString()]);
-//   }
-//   if (settings.height) {
-//     attr.push(["height", settings.height.toString()]);
-//   }
-//   const fig = `fig:${settings.caption}`;
-//   return Para([Image([id, [], attr], [Str(caption)], [imagePath, fig])]);
-// };

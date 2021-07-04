@@ -2,7 +2,9 @@
   "name": "gift-pandoc-filter",
   "version": "0.0.1",
   "description": "Convert GIFT format code fences to pandoc AST",
-  "repository": {"url": "https://github.com/fuhrmanator/gift-pandoc-filter"},
+  "repository": {
+    "url": "https://github.com/fuhrmanator/gift-pandoc-filter"
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest --colors"
@@ -15,7 +17,8 @@
   "license": "MIT",
   "dependencies": {
     "gift-pegjs": "^0.2.0",
-    "pandoc-filter": "^2.0.2"
+    "pandoc-filter": "^2.0.2",
+    "promisify-child-process": "^4.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.14.3",
