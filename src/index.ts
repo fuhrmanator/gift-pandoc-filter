@@ -17,7 +17,7 @@ const { spawn } = require('promisify-child-process');
 
 
 async function convertMarkdownToFormat(theMarkdown: string, format: string) {
-    const pandoc = spawn('pandoc', ['--eol=lf', '--extract-media=tmp', '--from', 'markdown', '--to', format], {maxBuffer: 200 * 1024})
+    const pandoc = spawn('pandoc', ['--eol=lf', '--extract-media=tmp', '--from', 'markdown', '--to', format], { maxBuffer: 200 * 1024 })
     pandoc.stdin.write(theMarkdown);
     pandoc.stdin.end();
 
@@ -48,6 +48,9 @@ stdio(async (ele, _format, meta) => {
                         question.choices.forEach(choice => {
                             theMarkdown += "   A.  " + choice.text.text + '\n';
                         });
+                        break;
+                    case "TF":
+                        theMarkdown += '\n\n#. ' + question.stem.text + ' (True or False)\n\n';
                         break;
                     default:
                         break;
