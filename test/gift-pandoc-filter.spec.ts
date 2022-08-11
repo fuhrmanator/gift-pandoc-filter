@@ -4,7 +4,7 @@ const exec = promisify(sysExec);
 
 async function execPandocOnFile(fileName: string, format: "markdown" | "html" | "pdf") {
   const { stdout } = await exec(
-    `pandoc -s -f markdown test/${fileName} --filter dist/index.js -t ${format}`
+    `pandoc -s -f markdown test/${fileName} --filter dist/pandoc-gift.js -t ${format}`
   );
   return String(stdout);
 }
